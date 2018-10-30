@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
 import firebase from 'firebase';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import ChatForm from './components/ChatForm';
 
 firebase.initializeApp({
     apiKey: "AIzaSyCMlllSLF6wfIW_Ldb9YaiCaTlAGw9qU98",
@@ -33,31 +32,34 @@ class App extends Component {
     }
     render() {
         return (
-            <div className="App">
-                <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo" />
-                    <p>
-                        OK right?
-          </p>
-                    {this.state.isSignedIn ? (
-                        <span>
-                            <div>Signed In!</div>
-                            <button onClick={() => firebase.auth().signOut()}>Sign Out!</button>
-                            <h1>Welcome {firebase.auth().currentUser.displayName}</h1>
-                        </span>
-                    ) : (
-                            <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />
-                        )}
-                    <a
-                        className="App-link"
-                        href="https://reactjs.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Learn React
-          </a>
-                </header>
+            <div>
+                {this.state.isSignedIn ? (
+                    <span>
+                        <nav className="navbar navbar-inverse" >
+                            <div className="container-fluid">
+                                <div className="navbar-header" color='#444753'>
+                                    <a className="navbar-brand" href="\">My ChatApp</a>
+                                </div>
+                                
+                                <ul className="nav navbar-nav navbar-right">
+                                    <li><a href="/"><span className="glyphicon glyphicon-user"></span> {firebase.auth().currentUser.displayName}</a></li>
+                                    <li>
+                                        <a href="\">
+                                            <span className="glyphicon glyphicon-log-in" onClick={() => firebase.auth().signOut()}>
+                                            </span> &nbsp;
+                                         Signout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </nav>
+                        <ChatForm />
+                    </span>
+                ) : (
+                        <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />
+                    )}
             </div>
+
         );
     }
 }
