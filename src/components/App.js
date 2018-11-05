@@ -1,19 +1,13 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
-import ChatForm from './components/ChatForm';
+import MemberList from './MemberList';
 
-firebase.initializeApp({
-    apiKey: "AIzaSyCMlllSLF6wfIW_Ldb9YaiCaTlAGw9qU98",
-    authDomain: "my-chat-app-d3806.firebaseapp.com",
-    databaseURL: "https://my-chat-app-d3806.firebaseio.com",
-    projectId: "my-chat-app-d3806",
-    storageBucket: "my-chat-app-d3806.appspot.com",
-    messagingSenderId: "676901211134"
-})
 
 class App extends Component {
+    
     state = { isSignedIn: false }
+    
     uiConfig = {
         signInFlow: "popup",
         signInOptions: [
@@ -30,7 +24,9 @@ class App extends Component {
             console.log("user", user)
         })
     }
+
     render() {
+        var {auth, onLoadChat} = this.props;
         return (
             <div>
                 {this.state.isSignedIn ? (
@@ -44,8 +40,8 @@ class App extends Component {
                                 <ul className="nav navbar-nav navbar-right">
                                     <li><a href="/"><span className="glyphicon glyphicon-user"></span> {firebase.auth().currentUser.displayName}</a></li>
                                     <li>
-                                        <a href="\">
-                                            <span className="glyphicon glyphicon-log-in" onClick={() => firebase.auth().signOut()}>
+                                        <a href="/" onClick={() => firebase.auth().signOut()}>
+                                            <span className="glyphicon glyphicon-log-in" >
                                             </span> &nbsp;
                                          Signout
                                         </a>
@@ -53,7 +49,7 @@ class App extends Component {
                                 </ul>
                             </div>
                         </nav>
-                        <ChatForm />
+                        <MemberList auth={auth} onLoadChat = {onLoadChat} />
                     </span>
                 ) : (
                         <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />
