@@ -6,6 +6,11 @@ export const login = (uid, displayName) => ({
     displayName
 });
 
+export const actOnLogin = (user) => ({
+    type: 'onLOGIN',
+    user
+});
+
 
 export const logout = () => ({
     type: 'LOGOUT'

@@ -4,7 +4,7 @@ class ChatForm extends Component {
     
     render() {
         var {auth, onLoadChat} = this.props;
-        console.log(auth, onLoadChat);
+        
         return (
             <div className="myContainer clearfix">
                 <div className="chat">

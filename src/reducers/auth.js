@@ -5,6 +5,11 @@ export default (state = {}, action) => {
         uid: action.uid,
         displayName: action.displayName
       };
+      case 'onLOGIN':
+      return {
+        auth: action.user,
+        roomname: action.user.uid
+      };
     case 'LOGOUT':
       return {};
     default:

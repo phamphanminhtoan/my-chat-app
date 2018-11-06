@@ -5,8 +5,14 @@ import MemberList from './MemberList';
 
 
 class App extends Component {
-    
-    state = { isSignedIn: false }
+    constructor(props){
+        super(props)
+        this.state = {
+            isSignedIn: false,
+            error: '',
+            joinError: ''
+        }
+    }
     
     uiConfig = {
         signInFlow: "popup",
@@ -18,9 +24,42 @@ class App extends Component {
             signInSuccess: () => false
         }
     }
+    onCreateChat = () => {
+       
+        const user = this.props.auth.auth;
+        const value = this.props.auth.roomname;
+        if (user) {
+            const name = user.displayName;
+           
+            if (value) {
+                
+                const room = {
+                    name: value,
+                    people: {
+                        id: user.uid,
+                        name,
+                        unread: 0,
+                        lastRead: 0,
+                        image: user.photoURL
+                    }
+                }
+                
+                this.props.onCreateChat(room, this.showCreateError);
+               
+            } else {
+                this.setState({ error: 'Please enter a valid room name!' });
+            }
+        }
+    }
+    showCreateError = (error) => {
+        this.setState({
+            error
+        });
+    }
     componentDidMount = () => {
         firebase.auth().onAuthStateChanged(user => {
             this.setState({ isSignedIn: !!user })
+            this.props.onLogin(user)
             console.log("user", user)
         })
     }
@@ -31,6 +70,7 @@ class App extends Component {
             <div>
                 {this.state.isSignedIn ? (
                     <span>
+                        {this.onCreateChat()}
                         <nav className="navbar navbar-inverse" >
                             <div className="container-fluid">
                                 <div className="navbar-header" color='#444753'>
@@ -49,7 +89,7 @@ class App extends Component {
                                 </ul>
                             </div>
                         </nav>
-                        <MemberList auth={auth} onLoadChat = {onLoadChat} />
+                        <MemberList/>
                     </span>
                 ) : (
                         <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />

@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
-import ChatForm from './ChatForm'
+import ChatForm from './ChatForm';
+import { connect } from 'react-redux';
+import { startClearUnread } from '../actions/rooms';
+import * as actRoom from './../actions/rooms';
+import * as actAuth from './../actions/auth';
+
 let CONTACTS = [
     {
         id: 1,
@@ -103,17 +108,18 @@ class MemberList extends Component {
         e.preventDefault();
         const user = this.props.auth;
         const data = {
-          roomName: e.target.rname.value,
-          id: user.uid,
-          name: user.displayName,
-          unread: 0
+            roomName: e.target.rname.value,
+            id: user.uid,
+            name: user.displayName,
+            unread: 0
         }
         this.props.onLoadChat(data);
-      }
-    
+    }
+
     render() {
         let contacts = this.state.displayedContacts;
-        var {auth, onLoadChat} = this.props;
+        var { auth, rooms, onLoadChat } = this.props;
+        console.log(rooms);
         return (
             <div className="myContainer clearfix">
                 <div className="people-list" id="people-list">
@@ -121,6 +127,7 @@ class MemberList extends Component {
                         <input type="text" placeholder="search" onChange={this.searchHandler} />
                         <i className="fa fa-search" />
                     </div>
+                    
                     <ul className="list">
                         {
                             contacts.map((el) => {
@@ -133,12 +140,20 @@ class MemberList extends Component {
                         }
                     </ul>
                 </div>
-                <ChatForm onJoinChat = {this.onJoinChat} auth={auth} onLoadChat = {onLoadChat}/>
+                <ChatForm onJoinChat={this.onJoinChat} auth={auth} onLoadChat={onLoadChat} />
             </div>
         );
     }
 }
 
+const mapStateToProps = (state) => ({
+    rooms: state.rooms,
+    auth: state.auth
+});
 
+const mapDispatchToProps = (dispatch) => ({
+    startClearUnread: (roomName) => dispatch(startClearUnread(roomName)),
+    onLoadChat: (data) => dispatch(actRoom.actOnLoadChat(data))
+});
 
-export default MemberList;
+export default connect(mapStateToProps, mapDispatchToProps)(MemberList);

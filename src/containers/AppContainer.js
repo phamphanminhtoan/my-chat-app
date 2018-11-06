@@ -1,41 +1,15 @@
 import React, { Component } from 'react';
 import App from './../components/App'
-import * as act from './../actions/rooms';
+import * as actRoom from './../actions/rooms';
+import * as actAuth from './../actions/auth';
 import { connect } from 'react-redux';
 class AppContainer extends Component {
-    state = {
-        error: '',
-        joinError: ''
-    };
     
-    onCreateRoom = (e) => {
-        e.preventDefault();
-        const user = this.props.auth;
-        const value = e.target.rname.value.trim();
-        if (user) {
-            const name = user.displayName;
-            if (value) {
-                this.setState({ error: '' });
-                const room = {
-                    name: value,
-                    people: {
-                        id: user.uid,
-                        name,
-                        unread: 0,
-                        lastRead: 0
-                    }
-                }
-                this.props.onCreateChat(room, this.showCreateError);
-            } else {
-                this.setState({ error: 'Please enter a valid room name!' });
-            }
-        }
-    }
     render() {
-        var { auth, onCreateChat } = this.props;
+        var { auth, onCreateChat, onLogin } = this.props;
 
         return (
-            <App auth={auth} onCreateChat={this.onCreateRoom} />
+            <App auth={auth} onCreateChat={onCreateChat} onLogin={onLogin}  />
         );
     }
 }
@@ -46,8 +20,9 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        onCreateChat: (room, showCreateError) => dispatch(act.actOnCreateChat(room, showCreateError)),
-        onLoadChat: (data) => dispatch(act.actOnLoadChat(data))
+        onLogin: (user) => dispatch(actAuth.actOnLogin(user)),
+        onCreateChat: (room, showCreateError) => dispatch(actRoom.actOnCreateChat(room, showCreateError)),
+        
     }
 }
 
