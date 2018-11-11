@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { startSendMessage, startLeaveRoom, startClearUnread } from '../actions/rooms';
+import { startSendMessage, startClearUnread } from '../actions/rooms';
 import Messages from './Messages';
 import PeopleModal from './PeopleModal';
 
@@ -35,7 +35,7 @@ export class RoomPage extends React.Component {
     }
 
     handleLeaveRoom = () => {
-        this.props.startLeaveRoom(this.roomName);
+        this.prop(this.roomName);
     }
 
     showPeople = () => {
@@ -98,7 +98,6 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => ({
     startSendMessage: (message, roomName) => dispatch(startSendMessage(message, roomName)),
-    startLeaveRoom: (roomName) => dispatch(startLeaveRoom(roomName)),
     startClearUnread: (roomName) => dispatch(startClearUnread(roomName))
 });
 

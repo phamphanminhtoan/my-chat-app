@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import MemberList from './MemberList';
 import { connect } from 'react-redux';
-import { startCreateRoom, startJoinRoom } from '../actions/rooms';
+import { startCreateRoom } from '../actions/rooms';
 import {onAddUser} from '../actions/auth'
 
 class App extends Component {
@@ -94,16 +94,6 @@ class App extends Component {
         });
     }
 
-    onJoinRoom = () => {
-        const user = this.props.auth;
-        // const data = {
-        //     roomName: e.target.rname.value,
-        //     id: user.uid,
-        //     name: user.displayName,
-        //     unread: 0
-        // }
-        //this.props.startJoinRoom(user, this.showJoinError);
-    }
     
     componentDidMount = () => {
         
@@ -156,8 +146,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        startCreateRoom: (room, showCreateError) => dispatch(startCreateRoom()),
-        startJoinRoom: (data, showJoinError) => dispatch(startJoinRoom(data, showJoinError)),
+        startCreateRoom: () => dispatch(startCreateRoom()),
         onAddUser: () => dispatch(onAddUser())
     }
 }

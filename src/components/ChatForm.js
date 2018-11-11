@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
-import { startSendMessage, startLeaveRoom, startClearUnread } from '../actions/rooms';
+import { startSendMessage, startClearUnread } from '../actions/rooms';
+import selectMessages from '../selectors/messages';
 import { connect } from 'react-redux';
 
 class ChatForm extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            image: ""
+            messages: []
         }
     }
 
@@ -25,9 +26,12 @@ class ChatForm extends Component {
     }
 
     render() {
-        var { rooms, person, auth } = this.props;
-      
-        if (rooms.length !== 0 && person !== null) {
+        var { rooms, person, messages } = this.props;
+        console.log(messages)
+
+        if (rooms.length !== 0 && person !== null ) {
+           
+            console.log(messages)
             return (
                 <div className="myContainer clearfix">
                     <div className="chat">
@@ -41,6 +45,7 @@ class ChatForm extends Component {
                         </div> {/* end chat-header */}
                         <div className="chat-history">
                             <ul>
+
                                 <li className="clearfix">
                                     <div className="message-data align-right">
                                         <span className="message-data-time">10:10 AM, Today</span> &nbsp; &nbsp;
@@ -50,7 +55,7 @@ class ChatForm extends Component {
                                         Hi Vincent, how are you? How is the project coming along?
                                         </div>
                                 </li>
-                                <li>
+                                <li className="clearfix">
                                     <div className="message-data">
                                         <span className="message-data-name"><i className="fa fa-circle online" /> Vincent</span>
                                         <span className="message-data-time">10:12 AM, Today</span>
@@ -68,7 +73,7 @@ class ChatForm extends Component {
                                         Well I am not sure. The rest of the team is not here yet. Maybe in an hour or so? Have you faced any problems at the last phase of the project?
                             </div>
                                 </li>
-                                <li>
+                                <li className="clearfix">
                                     <div className="message-data">
                                         <span className="message-data-name"><i className="fa fa-circle online" /> Vincent</span>
                                         <span className="message-data-time">10:20 AM, Today</span>
@@ -107,14 +112,14 @@ class ChatForm extends Component {
     }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state, props) => ({
     auth: state.auth,
-    rooms: state.rooms
+    rooms: state.rooms,
+    messages: selectMessages(state.rooms, props.person, state.auth.uid)
 });
 
 const mapDispatchToProps = (dispatch) => ({
     startSendMessage: (message, roomName) => dispatch(startSendMessage(message, roomName)),
-    startLeaveRoom: (roomName) => dispatch(startLeaveRoom(roomName)),
     startClearUnread: (roomName) => dispatch(startClearUnread(roomName))
 });
 

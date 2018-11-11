@@ -44,7 +44,7 @@ class MemberList extends Component {
 
 
     jumpTo(user) {
-       console.log("member",user.image)
+       
         this.setState({
             index: user.uid,
             objUser: user,
