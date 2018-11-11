@@ -1,4 +1,4 @@
-import database, { firebase, githubAuthProvider as provider } from '../firebase/firebase';
+import database from '../firebase/firebase';
 
 export const onLogin = (users) => {
    
@@ -22,7 +22,6 @@ export const setUser = () => {
                         ...childSnapshot.val()
                     });}
                 });
-                console.log(users)
                 dispatch(onLogin(users))
             });
         }

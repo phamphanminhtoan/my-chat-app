@@ -9,7 +9,6 @@ import configureStore from './store/configureStore';
 import { login, logout } from './actions/auth';
 import { setStartState, clearState } from './actions/rooms';
 import { history } from './routers/AppRouter';
-import LoadingPage from './components/LoadingPage';
 import {setUser} from './actions/users'
 
 
@@ -29,7 +28,6 @@ const renderApp = () => {
     }
 };
 
-ReactDOM.render(<LoadingPage />, document.getElementById('root'));
 
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {

@@ -2,9 +2,6 @@ import React, { Component } from 'react';
 import ChatForm from './ChatForm';
 import { connect } from 'react-redux';
 import { startClearUnread, setStartState } from '../actions/rooms';
-import * as actRoom from './../actions/rooms';
-import * as actAuth from './../actions/auth';
-import firebase from 'firebase'
 
 class MemberList extends Component {
     constructor(props) {
@@ -30,19 +27,6 @@ class MemberList extends Component {
         })
     }
 
-    onJoinChat = (e) => {
-        e.preventDefault();
-        const user = this.props.auth;
-        const data = {
-            roomName: e.target.rname.value,
-            id: user.uid,
-            name: user.displayName,
-            unread: 0
-        }
-
-    }
-
-
     jumpTo(user) {
        
         this.setState({
@@ -58,7 +42,7 @@ class MemberList extends Component {
 
     render() {
 
-        var { rooms, users } = this.props;
+        var { users } = this.props;
         if (users.length > 0) {
             return (
 

@@ -60,12 +60,7 @@ export class RoomPage extends React.Component {
     componentDidUpdate() {
         const rooms = this.props.rooms;
         if (rooms.length > 0) {
-            const a = rooms.find((room) => {
-                return room.name === this.roomName;
-                // const roomPath = a.id;
-                // this.props.startClearUnread(this.roomName);
-            });
-
+            
         }
     }
 

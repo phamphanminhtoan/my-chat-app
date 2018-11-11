@@ -60,23 +60,11 @@ class App extends Component {
        
         const value = this.props.auth.displayName;
         if(user) {
-            const name = user.displayName;
+           
             if(value) {
-               
-            //this.setState({error: ''});
-            const room = {
-                name: value,
-                people: {
-                id: user.uid,
-                name,
-                image: user.image,
-                unread: 0,
-                lastRead: 0
-                }
-            }
-            
-            this.props.startCreateRoom();
-            } else {
+                this.props.startCreateRoom();
+            } 
+            else {
             //this.setState({error: 'Please enter a valid room name!'});
             }
         }
