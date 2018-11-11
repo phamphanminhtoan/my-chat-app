@@ -6,24 +6,14 @@ import { connect } from 'react-redux';
 class AppContainer extends Component {
     
     render() {
-        var { auth, onCreateChat, onLogin } = this.props;
+        var { auth, onCreateChat, onLogin, rooms } = this.props;
 
         return (
-            <App auth={auth} onCreateChat={onCreateChat} onLogin={onLogin}  />
+            <App auth={auth} room={rooms} onCreateChat={onCreateChat} onLogin={onLogin}  />
         );
     }
 }
 
-const mapStateToProps = (state) => ({
-    auth: state.auth
-});
 
-const mapDispatchToProps = (dispatch, props) => {
-    return {
-        onLogin: (user) => dispatch(actAuth.actOnLogin(user)),
-        onCreateChat: (room, showCreateError) => dispatch(actRoom.actOnCreateChat(room, showCreateError)),
-        
-    }
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(AppContainer);
+export default (AppContainer);

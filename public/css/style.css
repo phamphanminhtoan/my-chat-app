@@ -46,7 +46,23 @@ body {
 }
 .people-list img {
   float: left;
+  overflow:hidden;
+  border-radius:50px;
+   border-radius:50px;
+    border-radius:50px;
+    width:55px;
+    height: 55px;
 }
+
+
+
+.active, people-list:hover {
+  background-color: #666666;
+  color: white;
+}
+
+
+
 .people-list .about {
   float: left;
   margin-top: 8px;
@@ -72,6 +88,12 @@ body {
 }
 .chat .chat-header img {
   float: left;
+  overflow:hidden;
+  border-radius:50px;
+   border-radius:50px;
+    border-radius:50px;
+    width:55px;
+    height: 55px;
 }
 .chat .chat-header .chat-about {
   float: left;
@@ -204,4 +226,9 @@ body {
   content: " ";
   clear: both;
   height: 0;
+}
+
+.abc:hover {
+  background-color: #666666;
+  color: white;
 }

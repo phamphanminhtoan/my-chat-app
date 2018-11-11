@@ -1,69 +1,177 @@
-import firebase from 'firebase'
+import database, { firebase } from '../firebase/firebase';
 import { history } from '../routers/AppRouter';
 import moment from 'moment';
+import * as path from 'path';
+import { getDiffieHellman } from 'crypto';
+// import { ipcRenderer } from 'electron';
 
-
-export const createRoom = ({ id, name, people, messages = [] }) => ({
+export const createRoom = ({ id, messages }) => ({
     type: 'CREATE_ROOM',
     room: {
         id,
-        name,
-        people,
         messages
     }
 });
-
-
-export const actOnCreateChat = (roomper = {}, showCreateError) => {
+export const getId = (key) => {
+    return key
+}
+export const setStartState = () => {
     return (dispatch, getState) => {
-        const room = {
-            name: roomper.name,
+
+        const uid = getState().auth.uid;
+
+        if (uid) {
+
+            return database.ref('rooms').once('value', (snapshot) => {
+                if (snapshot.val()) {
+
+                    const rooms = snapshot.val();
+
+                    for (const key in rooms) {
+                        dispatch(startListening(key));
+                        database.ref(`rooms/${key}`).once('value', (snapshot) => {
+                            const room = snapshot.val();
+                            const { messages} = room;
+                            const id = key;
+                            dispatch(createRoom({id, messages}))
+                        });
+                    }
+                    dispatch(orderRoomsStartState());
+                }
+            });
         }
-        return firebase.database().ref('rooms').once('value', (snapshot) => {
-            const rooms = [];
+    };
+}
+
+export const startSendMessage = (text, room, status = false) => {
+    return (dispatch, getState) => {
+        const user = getState().auth;
+        if (user) {
+
+            const { displayName, uid } = user;
+            const message = {
+                sender: { displayName, uid },
+                text,
+                createdAt: moment().format(),
+                status
+            };
+
+            database.ref(`rooms/${user.displayName}/messages`).once('value', (snapshot) => {
+                const messages = [];
+                var temp = snapshot.val();
+                for (var key in temp) {
+                    messages.push({
+                        ...temp[key], id: key
+                    });
+                }
+
+
+                if (!messages.find((m) => m.id === room.id) || messages === null) {
+
+                    return database.ref(`rooms/${user.displayName}/messages/${room.id}`).set(room.id).then((ref) => {
+                        return database.ref(`rooms/${user.displayName}/messages/${room.id}`).push(message);
+                    });
+                }
+                else {
+
+                    return database.ref(`rooms/${user.displayName}/messages/${room.id}`).push(message);
+                }
+            });
+        }
+    };
+};
+
+export const test = (roomName) => {
+    return database.ref('rooms').once('value', (snapshot) => {
+        const rooms = [];
+
+        snapshot.forEach((childSnapshot) => {
+
+            rooms.push({
+                ...childSnapshot.val()
+            });
+        });
+        if (rooms !== null && rooms.find((r) => r.name === roomName)) return false;
+
+        return true;
+    });
+
+}
+export const setRoom = (roomName, auth) => {
+
+    return database.ref('rooms').once('value', (snapshot) => {
+        
+        const messages = {
+            sender: { displayName: auth.displayName, uid: auth.uid },
+            text: `You can contact together!`,
+            createdAt: moment().format(),
+            status: true
+        }
+        
+        database.ref(`rooms/${roomName}`).set(roomName).then(() => {
+            database.ref(`rooms/${roomName}/messages`).push(messages);
+        });
+    });
+}
+
+export const startCreateRoom = () => {
+    return (dispatch, getState) => {
+
+        return database.ref('users').once('value', (snapshot) => {
+            const users = [];
+            const objUsers = snapshot.val();
+
             snapshot.forEach((childSnapshot) => {
-                rooms.push({
+                users.push({
                     ...childSnapshot.val()
                 });
             });
-            if (!rooms.find((r) => r.name === room.name)) {
-                return firebase.database().ref(`rooms/${room.name}`).set(room).then((ref) => {
-                    return firebase.database().ref(`rooms/${room.name}/people/${roomper.people.id}`).set(roomper.people).then(() => {
-                        firebase.database().ref(`users/${roomper.people.id}/rooms/${room.name}`).set({ roomName: room.name });
+            if (!users.find((u) => u.uid === getState().auth.uid)) {
+                if (users.length > 0) {
 
-                        dispatch(createRoom({
-                            ...roomper,
-                            people: [roomper.people]
-                        }));
-                        const perName = roomper.people.name;
-                        // dispatch(startSendMessage(`${perName} created this room`, room.name, true)).then(() => {
-                        //     dispatch(startListening(room.name));
-                        //     history.push(`/room/${room.name}`);
-                        // });
-                    });
-                });
-            } else {
-                return showCreateError('Room name not available!');
+                    for (var userKey in objUsers) {
+
+                        if (userKey !== getState().auth.uid) {
+                            var roomName1 = `${getState().auth.uid}-${userKey}`;
+
+                            var roomName2 = `${userKey}-${getState().auth.uid}`;
+                            const roomper = {
+                                id: roomName1,
+                                name: roomName1,
+                                image: getState().auth.image,
+                            }
+                            if (test(roomName1) && test(roomName2)) {
+
+                                setRoom(roomName1, getState().auth);
+                                dispatch(createRoom({ ...roomper }))
+                            }
+                        }
+
+                    }
+                }
             }
 
-        });
+        })
+
     };
 };
 
 
 export const startListening = (roomName) => {
+
     return (dispatch, getState) => {
-        return firebase.database().ref(`rooms/${roomName}/messages`).on('child_added', (msgSnapshot) => {
+        return database.ref(`rooms/${roomName}/messages`).on('child_added', (msgSnapshot) => {
             if (getState().rooms.find((r) => r.name === roomName)) {
-                firebase.database().ref(`rooms/${roomName}/people`).once('value', (personSnapshot) => {
+                database.ref(`rooms/${roomName}/people`).once('value', (personSnapshot) => {
                     const message = msgSnapshot.val();
+
                     dispatch(sendMessage({ ...message, id: msgSnapshot.key }, roomName));
                     dispatch(orderRoomsStartState());
-                    if (message.sender.displayName !== getState().auth.displayName) {
-                        // ipcRenderer.send('playNotif', message.sender.displayName, message.text);
-                        const audio = new Audio('/sounds/notif.mp3');
-                        audio.play();
-                    }
+                    // if (message.sender.displayName !== getState().auth.displayName) {
+                    //     // ipcRenderer.send('playNotif', message.sender.displayName, message.text);
+                    //     const audio = new Audio('./../public/sounds/notif.mp3');
+                    //     audio.play();
+                    // }
                     const keyword = message.status && message.text.split(' ').splice(-1, 1)[0];
                     if (keyword === "left") {
                         dispatch(onLeft(roomName, message.sender.uid));
@@ -74,12 +182,12 @@ export const startListening = (roomName) => {
                     const personID = getState().auth.uid;
 
                     if (personID === message.sender.uid && keyword !== 'left') {
-                        firebase.database().ref(`rooms/${roomName}/people/${personID}`).update({ unread: 0, lastRead: message.createdAt }).then(() => {
+                        database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: 0, lastRead: message.createdAt }).then(() => {
                             dispatch(setUnread(roomName, personID, message.createdAt, 0));
                         });
                     }
                     else if (personID !== message.sender.uid && moment(message.createdAt) > moment(personSnapshot.val()[personID].lastRead)) {
-                        firebase.database().ref(`rooms/${roomName}/people/${personID}`).update({ unread: personSnapshot.val()[personID].unread + 1, lastRead: message.createdAt }).then(() => {
+                        database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: personSnapshot.val()[personID].unread + 1, lastRead: message.createdAt }).then(() => {
                             dispatch(setUnread(roomName, personID, message.createdAt, personSnapshot.val()[personID].unread + 1));
                         });
                     }
@@ -96,55 +204,68 @@ const isAlreadyAdded = (data, id) => {
     return false;
 }
 
-export const actOnLoadChat = (data = {}, showJoinError) => {
+
+export const startJoinRoom = (data = {}, showJoinError) => {
     return (dispatch, getState) => {
         const state = getState();
-        return firebase.database().ref(`rooms/${data.roomName}`).once('value', (snapshot) => {
+        return database.ref('rooms').once('value', (snapshot) => {
             const value = snapshot.val();
-            const id = data.id;
+            const id = data.uid;
             if (value === null) {
                 return showJoinError('Room not found!');
             }
-            else if (value.people && value.people[id]) {
-                history.push(`room/${data.roomName}`);
-            }
-            else {
-                dispatch(startListening(data.roomName));
-                const person = {
-                    name: data.name,
-                    id: data.id,
-                    unread: data.unread,
-                    lastRead: 0
-                };
-                let people = [];
-                let messages = [];
-                for (var key in value.people) {
-                    people.push({
-                        id: value.people[key].id,
-                        name: value.people[key].name,
-                        unread: value.people[key].unread,
-                        lastRead: value.people[key].lastRead
+            for (let roomsKey in value) {
+                if (roomsKey !== data.displayName) {
+
+                    database.ref(`rooms/${roomsKey}`).once('value', (snapshot) => {
+                        const room = snapshot.val();
+                        if (room.people && room.people[id]) {
+                            //history.push(`room/${data.roomName}`);
+
+                        }
+                        else {
+                            dispatch(startListening(roomsKey));
+                            const person = {
+                                name: data.name,
+                                id: data.uid,
+                                image: data.image,
+                                unread: data.unread,
+                                lastRead: 0
+                            };
+                            let people = [];
+                            let messages = [];
+                            for (var key in room.people) {
+                                people.push({
+                                    id: room.people[key].id,
+                                    name: room.people[key].name,
+                                    image: room.people[key].image,
+                                    unread: room.people[key].unread,
+                                    lastRead: room.people[key].lastRead
+                                });
+                            }
+                            for (var messageKey in room.messages) {
+                                messages.push({
+                                    ...room.messages[messageKey]
+                                });
+                            }
+                            return database.ref(`rooms/${roomsKey}/people/${person.id}`).set(person).then((ref) => {
+                                database.ref(`users/${person.id}/rooms/${roomsKey}`).set({ roomName: roomsKey });
+
+                                dispatch(createRoom({
+                                    people: [...people, person],
+                                    name: roomsKey,
+                                    image: data.image,
+                                    messages
+                                }));
+                                const perName = person.name;
+
+                                dispatch(startSendMessage(`${perName} joined`, roomsKey, true));
+
+                                //history.push(`room/${data.roomName}`);
+                            });
+                        }
                     });
                 }
-                for (var key in value.messages) {
-                    messages.push({
-                        ...value.messages[key]
-                    });
-                }
-                return firebase.database().ref(`rooms/${data.roomName}/people/${person.id}`).set(person).then((ref) => {
-                    firebase.database().ref(`users/${person.id}/rooms/${data.roomName}`).set({ roomName: data.roomName });
-
-                    dispatch(createRoom({
-                        people: [...people, person],
-                        name: data.roomName,
-                        messages
-                    }));
-                    const perName = person.name;
-
-                    dispatch(startSendMessage(`${perName} joined`, data.roomName, true));
-
-                    history.push(`room/${data.roomName}`);
-                });
             }
         });
     }
@@ -156,66 +277,13 @@ export const sendMessage = (message, roomName) => ({
     roomName
 });
 
-export const startSendMessage = (text, roomName, status = false) => {
-    return (dispatch, getState) => {
-        const user = getState().auth;
-        if (user) {
-            const uid = user.uid;
-            const displayName = user.displayName;
-            const message = {
-                sender: { uid, displayName },
-                text,
-                createdAt: moment().format(),
-                status
-            };
-            return firebase.database().ref(`rooms/${roomName}/messages`).push(message);
-        }
-    };
-};
+
 
 export const orderRoomsStartState = () => ({
     type: 'ORDER_ROOMS_START_STATE'
 });
 
-export const setStartState = () => {
-    return (dispatch, getState) => {
-        // console.log('setting start state');
-        const uid = getState().auth.uid;
-        if (uid) {
-            // console.log('user found');
-            return firebase.database().ref(`users/${uid}`).once('value', (snapshot) => {
-                if (snapshot.val()) {
-                    console.log('snapshot', snapshot.val());
-                    const rooms = snapshot.val().rooms;
-                    console.log(rooms);
-                    for (var key in rooms) {
-                        console.log(key);
-                        dispatch(startListening(key));
-                        firebase.database().ref(`rooms/${key}`).once('value', (snapshot) => {
-                            const room = snapshot.val();
-                            const { name, people, messages } = room;
-                            let peopleArray = [], messagesArray = [];
-                            for (var peopleKey in people) {
-                                peopleArray.push(people[peopleKey]);
-                            }
-                            for (var messagesKey in messages) {
-                                messagesArray.push({ ...messages[messagesKey], id: messagesKey });
-                            }
-                            console.log('creating room');
-                            dispatch(createRoom({
-                                name,
-                                people: peopleArray,
-                                messages: messagesArray
-                            }));
-                        });
-                    }
-                    // console.log('hello')
-                    dispatch(orderRoomsStartState());
-                }
-            });
-        }
-    };
-}
+
 
 export const clearState = ({
     type: 'CLEAR_STATE'
@@ -233,10 +301,10 @@ export const startLeaveRoom = (roomName) => {
         if (user) {
             const userId = user.uid;
             const displayName = user.displayName;
-            firebase.database().ref(`rooms/${roomName}/people/${userId}`).remove();
-            firebase.database().ref(`users/${userId}/rooms/${roomName}`).remove(() => {
+            database.ref(`rooms/${roomName}/people/${userId}`).remove();
+            database.ref(`users/${userId}/rooms/${roomName}`).remove(() => {
                 dispatch(leaveRoom(roomName, userId));
-                dispatch(startSendMessage(`${displayName} left`, roomName, true));
+                //dispatch(startSendMessage(`${displayName} left`, roomName, true));
                 history.push('/join');
             });
         }
@@ -263,7 +331,7 @@ export const startClearUnread = (roomName) => {
         const uid = getState().auth.uid;
         if (uid) {
             time = moment().format();
-            return firebase.database().ref(`rooms/${roomName}/people/${uid}`).update({
+            return database.ref(`rooms/${roomName}/people/${uid}`).update({
                 unread: 0,
                 lastRead: time
             }).then(() => {

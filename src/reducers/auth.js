@@ -1,14 +1,11 @@
 export default (state = {}, action) => {
   switch (action.type) {
     case 'LOGIN':
+    console.log("heredsc")
       return {
         uid: action.uid,
+        image: action.image,
         displayName: action.displayName
-      };
-      case 'onLOGIN':
-      return {
-        auth: action.user,
-        roomname: action.user.uid
       };
     case 'LOGOUT':
       return {};
