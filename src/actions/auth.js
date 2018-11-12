@@ -1,4 +1,4 @@
-import database, { firebase, githubAuthProvider as provider } from '../firebase/firebase';
+import firebase, { database, githubAuthProvider as provider } from '../firebase/fbConfig';
 
 export const login = (uid, image, displayName) => ({
     type: 'LOGIN',
@@ -9,7 +9,7 @@ export const login = (uid, image, displayName) => ({
 
 
 export const onAddUser = () => {
-    return (dispatch, getState) =>
+    return (dispatch, getState, { getFirebase, getFirestore }) =>
     {
         
         return database.ref('users').once('value', (snapshot) => {
@@ -39,7 +39,7 @@ export const onAddUser = () => {
 }
 export const startLogin = () => {
 
-    return () => {
+    return ({ getFirebase, getFirestore }) => {
         // return firebase.auth().signInWithPopup(googleAuthProvider);
         firebase.auth().signInWithRedirect(provider);
     };
@@ -50,7 +50,7 @@ export const logout = () => ({
 });
 
 export const startLogout = () => {
-    return () => {
+    return ({ getFirebase, getFirestore }) => {
         return firebase.auth().signOut();
     };
 };

@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 import ChatForm from './ChatForm';
 import { connect } from 'react-redux';
 import { startClearUnread, setStartState } from '../actions/rooms';
+import { firebaseConnect,getFirebase, reactReduxFirebase, firebaseReducer} from "react-redux-firebase";
+import { compose } from 'redux';
+import {database} from './../firebase/fbConfig'
+ 
 
 class MemberList extends Component {
     constructor(props) {
@@ -41,7 +45,7 @@ class MemberList extends Component {
     }
 
     render() {
-
+        
         var { users } = this.props;
         if (users.length > 0) {
             return (
@@ -121,4 +125,4 @@ const mapDispatchToProps = (dispatch) => ({
     
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(MemberList);
+export default compose(firebaseConnect(), connect(mapStateToProps, mapDispatchToProps))(MemberList);

@@ -9,7 +9,7 @@ import configureStore from './store/configureStore';
 import { login, logout } from './actions/auth';
 import { setStartState, clearState } from './actions/rooms';
 import { history } from './routers/AppRouter';
-import {setUser} from './actions/users'
+import {setUser} from './actions/users';
 
 
 const store = configureStore();

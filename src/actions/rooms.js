@@ -1,4 +1,4 @@
-import database from '../firebase/firebase';
+import { database } from '../firebase/fbConfig';
 import moment from 'moment';
 
 export const createRoom = ({ id, messages }) => ({
@@ -12,7 +12,8 @@ export const getId = (key) => {
     return key
 }
 export const setStartState = () => {
-    return (dispatch, getState) => {
+    return (dispatch, getState, { getFirebase, getFirestore }) => {
+        const firebase = getFirebase();
 
         const uid = getState().auth.uid;
 
@@ -27,9 +28,9 @@ export const setStartState = () => {
                         dispatch(startListening(key));
                         database.ref(`rooms/${key}`).once('value', (snapshot) => {
                             const room = snapshot.val();
-                            const { messages} = room;
+                            const { messages } = room;
                             const id = key;
-                            dispatch(createRoom({id, messages}))
+                            dispatch(createRoom({ id, messages }))
                         });
                     }
                     dispatch(orderRoomsStartState());
@@ -40,7 +41,7 @@ export const setStartState = () => {
 }
 
 export const startSendMessage = (text, person, status = false) => {
-    return (dispatch, getState) => {
+    return (dispatch, getState, { getFirebase, getFirestore }) => {
         const user = getState().auth;
         if (user) {
 
@@ -51,7 +52,7 @@ export const startSendMessage = (text, person, status = false) => {
                 createdAt: moment().format(),
                 status
             };
-            
+
 
             database.ref("rooms").once('value', (snapshot) => {
                 const roomKey = [];
@@ -60,14 +61,14 @@ export const startSendMessage = (text, person, status = false) => {
                     roomKey.push({
                         key
                     });
-                    
+
                 }
-                
-                var c = roomKey.find((r) => r.key === `${getState().auth.uid}-${person.uid}`) !== undefined 
-                ? roomKey.find((r) => r.key === `${getState().auth.uid}-${person.uid}`).key 
-                : roomKey.find((r) => r.key === `${person.uid}-${getState().auth.uid}`).key ;
+
+                var c = roomKey.find((r) => r.key === `${getState().auth.uid}-${person.uid}`) !== undefined
+                    ? roomKey.find((r) => r.key === `${getState().auth.uid}-${person.uid}`).key
+                    : roomKey.find((r) => r.key === `${person.uid}-${getState().auth.uid}`).key;
                 database.ref(`rooms/${c}/messages`).push(message);
-                
+                dispatch(startListening(c));
             });
         }
     };
@@ -92,14 +93,14 @@ export const test = (roomName) => {
 export const setRoom = (roomName, auth) => {
 
     return database.ref('rooms').once('value', (snapshot) => {
-        
+
         const messages = {
             sender: { displayName: auth.displayName, uid: auth.uid },
             text: `You can contact together!`,
             createdAt: moment().format(),
             status: true
         }
-        
+
         database.ref(`rooms/${roomName}`).set(roomName).then(() => {
             database.ref(`rooms/${roomName}/messages`).push(messages);
         });
@@ -107,7 +108,7 @@ export const setRoom = (roomName, auth) => {
 }
 
 export const startCreateRoom = () => {
-    return (dispatch, getState) => {
+    return (dispatch, getState, { getFirebase, getFirestore }) => {
 
         return database.ref('users').once('value', (snapshot) => {
             const users = [];
@@ -151,35 +152,38 @@ export const startCreateRoom = () => {
 
 
 export const startListening = (roomName) => {
-
-    return (dispatch, getState) => {
+    
+    return (dispatch, getState, { getFirebase, getFirestore }) => {
+       
         return database.ref(`rooms/${roomName}/messages`).on('child_added', (msgSnapshot) => {
-            if (getState().rooms.find((r) => r.name === roomName)) {
+            console.log(getState().rooms)
+            if (getState().rooms.find((r) => r.id === roomName)) {
+                console.log("here")
                 database.ref(`rooms/${roomName}/people`).once('value', (personSnapshot) => {
                     const message = msgSnapshot.val();
-
+                    console.log("here")
                     dispatch(sendMessage({ ...message, id: msgSnapshot.key }, roomName));
                     dispatch(orderRoomsStartState());
-                    
-                    const keyword = message.status && message.text.split(' ').splice(-1, 1)[0];
-                    if (keyword === "left") {
-                        dispatch(onLeft(roomName, message.sender.uid));
-                    }
-                    else if (keyword === "joined") {
-                        dispatch(onJoined(roomName, personSnapshot.val()[message.sender.uid]));
-                    }
-                    const personID = getState().auth.uid;
 
-                    if (personID === message.sender.uid && keyword !== 'left') {
-                        database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: 0, lastRead: message.createdAt }).then(() => {
-                            dispatch(setUnread(roomName, personID, message.createdAt, 0));
-                        });
-                    }
-                    else if (personID !== message.sender.uid && moment(message.createdAt) > moment(personSnapshot.val()[personID].lastRead)) {
-                        database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: personSnapshot.val()[personID].unread + 1, lastRead: message.createdAt }).then(() => {
-                            dispatch(setUnread(roomName, personID, message.createdAt, personSnapshot.val()[personID].unread + 1));
-                        });
-                    }
+                    // const keyword = message.status && message.text.split(' ').splice(-1, 1)[0];
+                    // if (keyword === "left") {
+                    //     dispatch(onLeft(roomName, message.sender.uid));
+                    // }
+                    // else if (keyword === "joined") {
+                    //     dispatch(onJoined(roomName, personSnapshot.val()[message.sender.uid]));
+                    // }
+                    // const personID = getState().auth.uid;
+
+                    // if (personID === message.sender.uid && keyword !== 'left') {
+                    //     database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: 0, lastRead: message.createdAt }).then(() => {
+                    //         dispatch(setUnread(roomName, personID, message.createdAt, 0));
+                    //     });
+                    // }
+                    // else if (personID !== message.sender.uid && moment(message.createdAt) > moment(personSnapshot.val()[personID].lastRead)) {
+                    //     database.ref(`rooms/${roomName}/people/${personID}`).update({ unread: personSnapshot.val()[personID].unread + 1, lastRead: message.createdAt }).then(() => {
+                    //         dispatch(setUnread(roomName, personID, message.createdAt, personSnapshot.val()[personID].unread + 1));
+                    //     });
+                    // }
                 });
             }
         });
@@ -221,13 +225,13 @@ export const clearUnread = (roomName, uid, time, unread) => ({
 });
 
 export const setUnread = (roomName, uid, time, unread) => {
-    return (dispatch) => {
+    return (dispatch, { getFirebase, getFirestore }) => {
         dispatch(clearUnread(roomName, uid, time, unread));
     }
 };
 
 export const startClearUnread = (roomName) => {
-    return (dispatch, getState) => {
+    return (dispatch, getState, { getFirebase, getFirestore }) => {
         let time = moment().endOf('month');
         const uid = getState().auth.uid;
         if (uid) {

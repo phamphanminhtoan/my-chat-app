@@ -1,4 +1,4 @@
-import database from '../firebase/firebase';
+import {database} from '../firebase/fbConfig';
 
 export const onLogin = (users) => {
    

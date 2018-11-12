@@ -53,6 +53,10 @@ export default (state = defaultState, action) => {
       
             return state.map((room) => {
                 if (room.name === action.roomName) {
+                    console.log({
+                        ...room,
+                        messages: [...room.messages, action.message]
+                    })
                     return {
                         ...room,
                         messages: [...room.messages, action.message]
@@ -64,10 +68,10 @@ export default (state = defaultState, action) => {
             });
 
         case 'ORDER_ROOMS_START_STATE':
-
-            state.sort((a, b) => {
-                return moment(a.messages[a.messages.length - 1].createdAt) < moment(b.messages[b.messages.length - 1].createdAt);
-            });
+        
+            // state.sort((a, b) => {
+            //     return moment(a.messages[a.messages.length - 1].createdAt) < moment(b.messages[b.messages.length - 1].createdAt);
+            // });
            
             return state.map((room) => room);
 

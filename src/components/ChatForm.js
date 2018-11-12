@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import { startSendMessage, startClearUnread } from '../actions/rooms';
 import selectMessages from '../selectors/messages';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { firebaseConnect, getFirebase, reactReduxFirebase, firebaseReducer } from "react-redux-firebase";
+import { database } from './../firebase/fbConfig';
+import moment from 'moment';
+import Messages from './Messages';
 
 class ChatForm extends Component {
     constructor(props) {
@@ -10,7 +15,7 @@ class ChatForm extends Component {
             messages: []
         }
     }
-
+    
 
     onSubmit = (e) => {
         e.preventDefault();
@@ -25,17 +30,13 @@ class ChatForm extends Component {
         e.target.reset();
     }
 
-
+    
 
     render() {
-        var { rooms, person, messages, auth } = this.props;
-
+        var { rooms, person, messages } = this.props;
+        
         if (rooms.length !== 0 && person !== null && messages !== undefined) {
-            var list = messages.messages
-
-            
-
-            
+            var list = messages.messages;
             return (
                 <div className="myContainer clearfix">
                     <div className="chat">
@@ -47,42 +48,7 @@ class ChatForm extends Component {
                             </div>
                             <i className="fa fa-star" />
                         </div> {/* end chat-header */}
-                        <div className="chat-history">
-                            <ul>
-                                {
-                                    Object.keys(list).map((key) => {
-                                        if (list[key].sender.uid === auth.uid) {
-                                            return (
-                                                <li key = {key} className="clearfix">
-                                                    <div className="message-data">
-                                                        <span className="message-data-name"><i className="fa fa-circle online" /> {list[key].sender.displayName}</span>
-                                                        <span className="message-data-time">{list[key].createdAt}</span>
-                                                    </div>
-                                                    <div className="message my-message">
-                                                        {list[key].text}
-                                                    </div>
-                                                </li>
-                                            );
-                                        }
-                                        else {
-                                            return (
-                                                <li key = {key} className="clearfix">
-                                                    <div className="message-data align-right">
-                                                        <span className="message-data-time">{list[key].createdAt}</span> &nbsp; &nbsp;
-                                                        <span className="message-data-name">{list[key].sender.displayName}</span> <i className="fa fa-circle me" />
-                                                    </div>
-                                                    <div className="message other-message float-right">
-                                                        {list[key].text}
-                                                    </div>
-                                                </li>
-
-                                            );
-                                        }
-                                    })
-                                }
-                                
-                            </ul>
-                        </div> {/* end chat-history */}
+                        <Messages person = {person}/> {/* end chat-history */}
                         <form onSubmit={this.onSubmit} autoComplete="off" id="message-form">
                             <div className="chat-message clearfix">
                                 <textarea name="message" id="message-to-send" placeholder="Type your message" rows={3} defaultValue={""} />
@@ -113,5 +79,5 @@ const mapDispatchToProps = (dispatch) => ({
     startClearUnread: (roomName) => dispatch(startClearUnread(roomName))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChatForm);
+export default compose(firebaseConnect(), connect(mapStateToProps, mapDispatchToProps))(ChatForm);
 

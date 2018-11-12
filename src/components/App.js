@@ -2,8 +2,11 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import MemberList from './MemberList';
 import { connect } from 'react-redux';
+import {compose} from 'redux';
 import { startCreateRoom } from '../actions/rooms';
-import {onAddUser} from '../actions/auth'
+import {onAddUser} from '../actions/auth';
+import { firebaseConnect,getFirebase, reactReduxFirebase, firebaseReducer} from "react-redux-firebase";
+import {database} from './../firebase/fbConfig'
 
 class App extends Component {
     
@@ -126,11 +129,15 @@ class App extends Component {
     }
 }
 
-const mapStateToProps = (state) => ({
-    auth: state.auth,
-    rooms: state.rooms,
-     users: state.users
-});
+const mapStateToProps = (state) => {
+    
+    return {
+        auth: state.auth,
+        rooms: state.rooms,
+        users: state.users,
+        firebaseReducer: state.firebaseReducer
+    }
+};
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
@@ -139,4 +146,4 @@ const mapDispatchToProps = (dispatch, props) => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default compose(firebaseConnect(), connect(mapStateToProps, mapDispatchToProps))(App);

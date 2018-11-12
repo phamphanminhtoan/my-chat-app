@@ -14,4 +14,6 @@ firebase.initializeApp(config);
 const database = firebase.database();
 const githubAuthProvider = new firebase.auth.GithubAuthProvider();
 
-export { firebase, githubAuthProvider, database as default };
+firebase.firestore().settings({ timestampsInSnapshots: true });
+
+export { database, githubAuthProvider, firebase  as default };

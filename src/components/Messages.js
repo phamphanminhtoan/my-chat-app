@@ -4,64 +4,71 @@ import selectMessages from '../selectors/messages';
 import moment from 'moment';
 
 class Messages extends React.Component {
-
-
-    scrollToBottom = (options) => {
-        this.messagesEnd.scrollIntoView(options);
-    }
-
-    componentDidMount() {
-        this.scrollToBottom(false);
-    }
-
-    componentDidUpdate() {
-        this.scrollToBottom({ block: 'end', behavior: "smooth" });
-    }
-
-    displayMessages = (messages) => {
-        if (typeof messages === 'string') {
-            return <li className="message__time">{messages}</li>;
-        }
+    displayMessages = (list) => {
+        console.log(list)
         let a = [], prevSender;
-        // console.log(messages);
-        messages.forEach((message) => {
-            //      const name = <p className="message__name">{message.sender.displayName}</p>;
-            const time = <p className="message__time">{moment(message.createdAt).format('h:mm:ss a, MMMM Do YYYY, dddd')}</p>;
-            const text = <p className="message__text">{message.text}</p>;
-            // console.log(prevSender, messages[key].sender.displayName)
-            if (message.status) {
-                a.push(<li key={message.id} className="message-with-status">{text}{time}</li>);
+        if(list !== null){Object.keys(list).map((key) => {
+            const messEL = list[key].sender.uid === this.props.auth.uid ? <li key={key} className="clearfix">
+                <div className="message-data">
+                    <span className="message-data-name"><i className="fa fa-circle online" /> {list[key].sender.displayName}</span>
+                    <span className="message-data-time">{moment(list[key].createdAt).format('h:mm:ss a, MMMM Do YYYY, dddd')}</span>
+                </div>
+                <div className="message my-message">
+                    {list[key].text}
+                </div>
+            </li>
+                : <li key={key} className="clearfix">
+                    <div className="message-data align-right">
+                        <span className="message-data-time">{list[key].createdAt}</span> &nbsp; &nbsp;
+        <span className="message-data-name">{list[key].sender.displayName}</span> <i className="fa fa-circle me" />
+                    </div>
+                    <div className="message other-message float-right">
+                        {list[key].text}
+                    </div>
+                </li>;
+            if (list[key].status) {
+                a.push(messEL);
                 prevSender = null;
             }
 
-            else if (prevSender === message.sender.uid) {
-                a.push(<li key={message.id} className="message">{time}{text}</li>);
+            else if (prevSender === list[key].sender.uid) {
+                a.push(messEL);
             }
             else {
-                prevSender = message.sender.uid;
-                a.push(<li key={message.id} className="message">{/*name*/}{time}{text}</li>);
+                prevSender = list[key].sender.uid;
+                a.push(messEL);
             }
-        });
-        // a.push(<li key="" tabIndex="1"></li>);
+        });}
         return a;
     }
-
     render() {
-        return (
-            <div className="messages-box">
-                <ul>
-                    {
-                        this.displayMessages(this.props.messages)
-                    }
-                    <li ref={(el) => { this.messagesEnd = el; }}></li>
-                </ul>
-            </div>
-        );
+        var { rooms, person, messages } = this.props;
+
+        if (rooms.length !== 0 && person !== null && messages !== undefined) {
+            var list = messages.messages;
+            return (
+                <div className="chat-history">
+                    <ul>
+                        {
+                            this.displayMessages(list)
+
+                        }
+
+                    </ul>
+                </div>
+            );
+
+        }
+        else {
+            return (<div><h1>Loading chat...</h1></div>)
+        }
     }
 }
 
 const mapStateToProps = (state, props) => ({
-    messages: selectMessages(state.rooms, props.roomName)
+    auth: state.auth,
+    rooms: state.rooms,
+    messages: selectMessages(state.rooms, props.person, state.auth.uid)
 });
 
 export default connect(mapStateToProps)(Messages);
