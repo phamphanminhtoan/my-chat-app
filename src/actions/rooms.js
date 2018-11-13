@@ -156,14 +156,31 @@ export const startListening = (roomName) => {
     return (dispatch, getState, { getFirebase, getFirestore }) => {
        
         return database.ref(`rooms/${roomName}/messages`).on('child_added', (msgSnapshot) => {
-            console.log(getState().rooms)
+           
             if (getState().rooms.find((r) => r.id === roomName)) {
-                console.log("here")
+               
                 database.ref(`rooms/${roomName}/people`).once('value', (personSnapshot) => {
                     const message = msgSnapshot.val();
-                    console.log("here")
-                    dispatch(sendMessage({ ...message, id: msgSnapshot.key }, roomName));
-                    dispatch(orderRoomsStartState());
+                   
+                    //dispatch(sendMessage({ ...message, id: msgSnapshot.key }, roomName));
+                    return database.ref('rooms').once('value', (snapshot) => {
+                        if (snapshot.val()) {
+        
+                            const rooms = snapshot.val();
+        
+                            for (const key in rooms) {
+                               
+                                database.ref(`rooms/${key}`).once('value', (snapshot) => {
+                                    const room = snapshot.val();
+                                    const { messages } = room;
+                                    const id = key;
+                                    dispatch(createRoom({ id, messages }))
+                                });
+                            }
+                            dispatch(orderRoomsStartState());
+                        }
+                    });
+                    //dispatch(orderRoomsStartState());
 
                     // const keyword = message.status && message.text.split(' ').splice(-1, 1)[0];
                     // if (keyword === "left") {
@@ -191,11 +208,14 @@ export const startListening = (roomName) => {
 }
 
 
-export const sendMessage = (message, roomName) => ({
-    type: 'SEND_MESSAGE',
-    message,
-    roomName
-});
+export const sendMessage = (message, roomName) => {
+    
+    return {
+        type: 'SEND_MESSAGE',
+        message,
+        roomName
+    }
+};
 
 
 

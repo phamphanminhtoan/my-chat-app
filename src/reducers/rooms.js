@@ -3,13 +3,13 @@ import moment from 'moment';
 const defaultState = [];
 
 export default (state = defaultState, action) => {
-    
+
     switch (action.type) {
         case 'CREATE_ROOM':
-       
+
             return [...state, action.room];
         case 'JOIN_ROOM':
-       
+
             return state.map((room) => {
                 if (room.name === action.roomName) {
                     return {
@@ -23,12 +23,12 @@ export default (state = defaultState, action) => {
             });
 
         case 'ON_LEFT':
-          
+
             return state.map((room) => {
-             
+
                 if (room.name === action.roomName) {
                     const p = room.people.filter((pe) => { return pe.id !== action.personID });
-                   
+
                     return {
                         ...room,
                         people: p
@@ -39,7 +39,7 @@ export default (state = defaultState, action) => {
             });
 
         case 'ON_JOINED':
-       
+
             return state.map((room) => {
                 if (room.name === action.roomName) {
                     room.people.push(action.person);
@@ -50,33 +50,31 @@ export default (state = defaultState, action) => {
             });
 
         case 'SEND_MESSAGE':
-      
+           
             return state.map((room) => {
-                if (room.name === action.roomName) {
-                    console.log({
-                        ...room,
-                        messages: [...room.messages, action.message]
-                    })
-                    return {
+                if (room.id === action.roomName) {
+                   
+                    var temp = {
                         ...room,
                         messages: [...room.messages, action.message]
                     }
+                    return [...state, ...temp]
                 }
                 else {
-                    return room;
+                    return state;
                 }
             });
 
         case 'ORDER_ROOMS_START_STATE':
-        
+
             // state.sort((a, b) => {
             //     return moment(a.messages[a.messages.length - 1].createdAt) < moment(b.messages[b.messages.length - 1].createdAt);
             // });
-           
+
             return state.map((room) => room);
 
         case 'CLEAR_UNREAD':
-       
+
             return state.map((room) => {
                 if (room.name === action.roomName) {
                     const people = room.people.map((p) => {
@@ -97,15 +95,15 @@ export default (state = defaultState, action) => {
             });
 
         case 'LEAVE_ROOM':
-       
+
             return state.filter((room) => {
                 return room.name !== action.roomName;
             });
         case 'CLEAR_STATE':
-     
+
             return [];
         default:
-  
+
             return state;
     }
 };

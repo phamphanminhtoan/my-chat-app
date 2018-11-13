@@ -5,9 +5,12 @@ import moment from 'moment';
 
 class Messages extends React.Component {
     displayMessages = (list) => {
-        console.log(list)
+        
         let a = [], prevSender;
-        if(list !== null){Object.keys(list).map((key) => {
+        if(list !== null && list !== undefined){
+            
+            Object.keys(list).map((key) => {
+            
             const messEL = list[key].sender.uid === this.props.auth.uid ? <li key={key} className="clearfix">
                 <div className="message-data">
                     <span className="message-data-name"><i className="fa fa-circle online" /> {list[key].sender.displayName}</span>
@@ -43,9 +46,10 @@ class Messages extends React.Component {
     }
     render() {
         var { rooms, person, messages } = this.props;
-
+        
         if (rooms.length !== 0 && person !== null && messages !== undefined) {
             var list = messages.messages;
+            
             return (
                 <div className="chat-history">
                     <ul>
